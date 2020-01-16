@@ -1,0 +1,132 @@
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #A0B0A0;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				color: #000000;
+				font-family: Monospace;
+				font-size: 13px;
+				text-align: center;
+				z-index:100;
+			}
+
+			a {
+				color:#0078ff;
+			}
+			a:hover {
+				color: #0080ff;
+			}
+
+		</style>
+	</head>
+	
+	<body>
+
+		<hr width="50%">
+		<div id="info" style="width: 100%; text-align:center;">
+			AZ
+		</div>
+		<hr width="50%">
+
+		<script src="three.js"></script>
+		<script>
+
+			var camera, scene, renderer, ls, cylinder;
+
+			init();
+			animate();
+
+			function init() {
+				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
+				camera.position.y = 1;
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color(0x1A2A1A);
+
+				renderer = new THREE.WebGLRenderer({ antialias: true });
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				document.body.appendChild(renderer.domElement);
+
+				//
+				var material = new THREE.MeshLambertMaterial({
+					color: new THREE.Color(0x8AAA8A)
+				})
+				var geometry = new THREE.CylinderGeometry(1, 1, 1, 32);
+
+				cylinder = new THREE.Mesh(geometry, material);
+
+				cylinder.position.x = 0;
+				cylinder.position.y = 0;
+				cylinder.position.z = -5;
+				geometry = new THREE.CylinderGeometry(0.2, 0.2, 0.3, 8);
+				subCylinder = new THREE.Mesh(geometry, material);
+				cylinder.add(subCylinder);
+				subCylinder.position.x = 1.1;
+				subCylinder.position.y = 0.3;
+				subCylinder = new THREE.Mesh(geometry, material);
+				cylinder.add(subCylinder);
+				subCylinder.position.x = -1.1;
+				subCylinder.position.y = 0.3;
+				scene.add(cylinder);
+				
+				var light = lightSphere(0.05, 0xAFAFFF);
+				light.position.x = 1;
+				light.position.y = 1;
+				light.position.z = -4;
+				scene.add(light);
+
+				light = new THREE.AmbientLight(0xAFFF00, 0.2);
+				scene.add(light);
+
+				ls = lightSphere(0.1, 0xFFFFFF);
+				scene.add(ls)
+				ls.position.z = -3.5;
+
+				window.addEventListener('resize', onWindowResize, false);
+
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth/window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
+			function animate() {
+				const time = new Date().getTime();
+				const radius = 2;
+				ls.position.x = radius * Math.sin (time/2000);
+				ls.position.y = radius * Math.cos (time/2000);
+				
+				cylinder.rotation.y = time/1200;
+				
+				renderer.render(scene,camera);
+				requestAnimationFrame(animate);
+			}
+
+			function lightSphere(radius, color) {
+				var light = new THREE.PointLight(color, 1);
+
+				const col = new THREE.Color(color);
+				
+				var material = new THREE.MeshLambertMaterial({
+					color: col, 
+					emissive: col,
+					emissiveIntensity: 0.5
+				});
+				var geometry = new THREE.SphereGeometry(radius, 8, 8);
+				var sphere = new THREE.Mesh(geometry, material);
+				
+				light.add(sphere);
+
+				return light;
+			}
+		</script>
+	</body>
+</html>
