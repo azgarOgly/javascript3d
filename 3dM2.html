@@ -1,0 +1,141 @@
+<html>
+<head>
+</head>
+<body>
+	<script src="three.min.js"></script>
+	<script>
+		var camera, scene, renderer;
+		var light0b, light1b;
+		var light0, light1;
+		var tail = new Array();
+
+		scene = new THREE.Scene();
+
+		camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 1, 10000);
+		//camera.position.z = 400;
+		//camera.position.y = -400;
+		camera.lookAt(scene.position);
+
+		renderer = new THREE.WebGLRenderer();
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		var rend = renderer.domElement;
+		rend.style.position = "absolute";
+		rend.style.top = 0; rend.style.bottom = 0;
+		rend.style.left = 0; rend.style.right = 0;
+		document.body.appendChild(renderer.domElement);
+
+		var geometry0 = new THREE.SphereGeometry(18, 16, 16);
+		var geometry1 = new THREE.SphereGeometry(20, 32, 32);
+		for (x=0; x<12; x++) {
+			for (y=0; y<12; y++) {
+				var g = (x%2 == 0 && y%2 == 0) ? geometry1 : geometry0;
+				var box = new THREE.Mesh(g, new THREE.MeshLambertMaterial({color: 0xA0B0A0, opacity: 0.3}));
+				box.position.x = 50*x - 300;
+				box.position.y = 50*y - 300;
+				scene.add(box);
+			}
+		}
+
+		var geometry = new THREE.PlaneGeometry(2000, 2000, 200, 200);
+		box = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial());
+		box.position.x = 0; box.position.y = 0; box.position.z = -35;
+		scene.add(box);
+
+		var light = new THREE.PointLight(0xffffff, 1, 520); 
+		light.position.set(300, 200, 70); 
+		scene.add(light);
+		geometry = new THREE.CylinderGeometry(5, 5, 10, 12);
+		var latern = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({emissive: 0xffffff}));
+		latern.position = light.position;
+		latern.rotation.x = THREE.Math.degToRad(90);
+		scene.add(latern);
+		geometry = new THREE.CylinderGeometry(3, 3, 100, 12);
+		var pole = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial());
+		pole.position.x = light.position.x; pole.position.y = light.position.y; 
+		pole.position.z = light.position.z; pole.position.z -= 55;
+		pole.rotation.x = THREE.Math.degToRad(90);
+		scene.add(pole);
+		geometry = new THREE.CylinderGeometry(3, 12, 3, 32);
+		var hat = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial());
+		hat.position.x = light.position.x; hat.position.y = light.position.y; 
+		hat.position.z = light.position.z; hat.position.z += 5;
+		hat.rotation.x = THREE.Math.degToRad(90);
+		scene.add(hat);
+		
+		light0 = new THREE.PointLight(0xffff3f, 2, 150); 
+		scene.add(light0);
+		geometry = new THREE.SphereGeometry(5, 8, 8);
+		light0b = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({emissive: 0xffff3f}));
+		scene.add(light0b);
+
+		light1 = new THREE.PointLight(0xff0000, 1, 250); 
+		scene.add(light1);
+		geometry = new THREE.SphereGeometry(3, 6, 6);
+		for (i=0; i<100; i++) {
+			var segment = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({emissive: 0xff0000}));
+			segment.scale.x = 1 - 0.01*i;
+			segment.scale.y = 1 - 0.01*i;
+			segment.scale.z = 1 - 0.01*i;
+			segment.position.set(0, 0, -100); 
+			tail[i] = segment;
+			if (i%2 == 0) {
+				scene.add(segment);
+			} else if (i%8 == 1) {
+				tail[i] = new THREE.PointLight(0xff0000, 0.1, 100);
+				tail[i].position.z = -100;
+				scene.add(tail[i]);
+			}
+
+		}
+		
+		neck = new THREE.Object3D();
+		neck.rotateOnAxis(new THREE.Vector3(1, 0, 0), THREE.Math.degToRad(90));
+		neck.up = new THREE.Vector3(0, 0, 1);
+		neck.position.z = 200;
+		neck.add(camera);
+		scene.add(neck);
+		camera.rotation.x = THREE.Math.degToRad(-45);
+		
+		window.addEventListener('resize', onWindowResize, false);
+		render();
+				
+		function render() {
+			requestAnimationFrame(render);
+
+			var t = new Date().getTime();
+
+			var radius = 150;
+			light0.intensity = 2 + 1 * Math.cos(THREE.Math.degToRad(t/200));
+			light0.position.x = radius * Math.sin(THREE.Math.degToRad(t/20));
+			light0.position.y = radius * Math.cos(THREE.Math.degToRad(t/20));
+			light0.position.z = 30;
+			light0b.position = light0.position;
+
+			radius = 200 + 100*Math.sin(THREE.Math.degToRad(-t/150)) + 10*Math.sin(THREE.Math.degToRad(-t/5));
+			light1.position.x = radius * Math.sin(THREE.Math.degToRad(-t/50));
+			light1.position.y = radius * Math.cos(THREE.Math.degToRad(-t/50));
+			light1.position.z = -25;
+			
+			for (i=99; i>0; i--) {
+				tail[i].position.x = tail[i-1].position.x;
+				tail[i].position.y = tail[i-1].position.y;
+				tail[i].position.z = tail[i-1].position.z;
+			}
+			tail[0].position = light1.position;
+
+			radius = 400;
+			neck.position.x = radius * Math.cos(THREE.Math.degToRad(t/250));
+			neck.position.y = radius * Math.sin(THREE.Math.degToRad(t/250));
+			neck.rotation.y = THREE.Math.degToRad(90) + THREE.Math.degToRad(t/250);
+			
+			renderer.render(scene, camera);
+		}
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+	</script>
+
+</body>
+</html>
